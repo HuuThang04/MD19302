@@ -21,7 +21,11 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
-app.use(morgan(':remote-addr - :method :url :status :response-time ms'));
+app.use((req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  console.log(`IP Address: ${ip}`);
+  next();
+});
 
 // Cấu hình logger dev
 app.use(morgan('dev'));
