@@ -5,6 +5,9 @@ var usermodel= require("../model/usermodel");
 var product= require("../model/product");
 var upload=require("../ultil/uploadConfig");
 var sendMail=require("../ultil/mailConfig");
+const JWT = require('jsonwebtoken');
+const config = require("../ultil/tokenConFig");
+
 
 router.get("/all",async function(req,res)
 {
@@ -112,4 +115,26 @@ router.post("/send-mail", async function(req, res, next){
     console.error("Error sending email:", err);
     res.json({ status: 0, message: "Gửi mail thất bại", error: err.message });
   }
+});
+
+//Đăng nhập
+router.post("/login", async function(req, res){
+  try{
+    const {username, password} = req.body;
+    const checkUser = await usermodel.findOne({username: username, password: password});
+    if(checkUser == null)
+    {
+      res.status(200).json({status: false, message: "Tài khoản hoặc mật khẩu không đúng", user});
+    }
+    else
+    {
+      const token = JWT.sign({username: username}, config.SECRETKEY, { expiresIn: '30s' });
+      const refreshtoken = JWT.sign({username: username}, config.SECRETKEY, { expiresIn: '1d' });
+      res.status(200).json({status: true, message: "Đăng nhập thành công", token: token, refreshtoken: refreshtoken});
+    }
+  }
+    catch(e)
+    {
+      res.status(400).json({status: false, message: "Đã xảy ra lỗi"});
+    }
 });

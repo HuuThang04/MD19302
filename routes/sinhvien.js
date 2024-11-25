@@ -2,17 +2,34 @@ var express = require('express');
 var router = express.Router();
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
-const jwt = require('jsonwebtoken')
-const userModel = require('../model/usermodel');
+const JWT = require('jsonwebtoken');
+const config = require("../ultil/tokenConFig");
 
 dotenv.config();
 
 var sinhvien = require("../model/sinhvien");
+const e = require('express');
 
 //lấy ds tất cả
 router.get("/all", async function (req, res) {
-  var list = await sinhvien.find();
-  res.json(list);
+  try {
+    const token = req.header("Authorization").split(' ')[1];
+  if(token){
+    JWT.verify(token, config.SECRETKEY, async function (err, id){
+      if(err){
+        res.status(403).json({"status": false, message: "Có lỗi xảy ra"});
+      }else{
+        var list = await sinhvien.find(); 
+        res.status(200).json(list);
+      }
+    });
+  }else{
+    res.status(401).json({status: false, message: "Không xác thực"});
+  }
+   
+  } catch (e) {
+    res.status(400).json({ status: false, message: "Có lỗi xảy ra: " + e }); 
+  }
 });
 
 //http://localhost:3000/sinhvien/monhoc?mon=CNTT
@@ -20,8 +37,20 @@ router.get("/all", async function (req, res) {
 router.get("/monhoc", async function (req, res) {
   const { mon } = req.query; // Lấy môn học từ query parameter
   try {
-    const list = await sinhvien.find({ mon: mon }); // Tìm sinh viên theo môn học
-    res.json(list);
+    const token = req.header("Authorization").split(' ')[1];
+  if(token){
+    JWT.verify(token, config.SECRETKEY, async function (err, id){
+      if(err){
+        res.status(403).json({"status": false, message: "Có lỗi xảy ra"});
+      }else{
+        const list = await sinhvien.find({ mon: mon }); // Tìm sinh viên theo môn học
+        res.json(list);
+      }
+    });
+  }else{
+    res.status(401).json({status: false, message: "Không xác thực"});
+  }
+    
   } catch (err) {
     res.status(500).json({ error: "Lỗi server" });
   }
@@ -37,9 +66,21 @@ router.get("/diem", async function (req, res) {
   const maxDiem = parseFloat(max);
 
   try {
-    const list = await sinhvien.find({
+    const token = req.header("Authorization").split(' ')[1];
+    if(token){
+      JWT.verify(token, config.SECRETKEY, async function (err, id){
+        if(err){
+          res.status(403).json({"status": false, message: "Có lỗi xảy ra"});
+        }else{
+          const list = await sinhvien.find({
       diemtb: { $gte: minDiem, $lte: maxDiem }
     });
+        }
+      });
+    }else{
+      res.status(401).json({status: false, message: "Không xác thực"});
+    }
+    
     res.json(list);
   } catch (err) {
     res.status(500).json({ error: "Lỗi server" });
@@ -49,17 +90,41 @@ router.get("/diem", async function (req, res) {
 
 //tìm kiếm thoong tin theo mssv
 router.get("/thongtin/:id", async function (req, res) {
-  var list = await sinhvien.findById(req.params.id);
+  const token = req.header("Authorization").split(' ')[1];
+    if(token){
+      JWT.verify(token, config.SECRETKEY, async function (err, id){
+        if(err){
+          res.status(403).json({"status": false, message: "Có lỗi xảy ra"});
+        }else{
+          var list = await sinhvien.findById(req.params.id);
   res.json(list);
+        }
+      });
+    }else{
+      res.status(401).json({status: false, message: "Không xác thực"});
+    }
+ 
 });
 
 //thêm 1 sv mới
 router.post("/add", async function (req, res) {
   try {
-    const { hoten, diemtb, mon, tuoi } = req.body;
+    const token = req.header("Authorization").split(' ')[1];
+    if(token){
+      JWT.verify(token, config.SECRETKEY, async function (err, id){
+        if(err){
+          res.status(403).json({"status": false, message: "Có lỗi xảy ra"});
+        }else{
+         const { hoten, diemtb, mon, tuoi } = req.body;
     const newItem = { hoten, diemtb, mon, tuoi };
     await sinhvien.create(newItem);
-    res.status(200).json({ status: true, message: "thêm thành công" });
+    res.status(200).json({ status: true, message: "thêm thành công" }); 
+        }
+      });
+    }else{
+      res.status(401).json({status: false, message: "Không xác thực"});
+    }
+    
   } catch (error) {
     res.status(400).json({ status: false, message: "có lỗi xảy ra" });
   }
@@ -174,7 +239,7 @@ router.post("/login", async function (req, res) {
     // Tạo JWT
     const userObject = user.toObject();
     delete userObject.password;
-    const token = jwt.sign({ user: userObject }, process.env.SECRETKEY, { expiresIn: '1h' });
+    const token = JWT.sign({ user: userObject }, process.env.SECRETKEY, { expiresIn: '1h' });
 
     res.status(200).json({ status: true, message: "Đăng nhập thành công", token: token });
   } catch (e) {
