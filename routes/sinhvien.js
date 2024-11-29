@@ -1,10 +1,11 @@
 var express = require('express');
 var router = express.Router();
 const bcrypt = require('bcryptjs');
-const dotenv = require('dotenv');
+
 const JWT = require('jsonwebtoken');
 const config = require("../ultil/tokenConFig");
 
+const dotenv = require('dotenv');
 dotenv.config();
 
 var sinhvien = require("../model/sinhvien");

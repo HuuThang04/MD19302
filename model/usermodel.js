@@ -4,6 +4,7 @@ const ObjectId = Schema.ObjectId;
 const user = new Schema({
     id: { type: ObjectId }, // khóa chính
     username:{type: String},
-    password:{type: String}
+    password:{type: String},
+    refreshToken: { type: String } 
 });
 module.exports = mongoose.models.user || mongoose.model('user', user);

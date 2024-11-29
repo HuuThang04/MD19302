@@ -7,6 +7,8 @@ var morgan = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var sinhvienRouter = require('./routes/sinhvien');
+var dotenv = require('dotenv')
+dotenv.config()
 
 const mongoose=require('mongoose');
 require('./model/usermodel');
@@ -34,7 +36,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-mongoose.connect('mongodb+srv://thang2004:h88m6cG5SpPCUP2L@cluster0.64typ.mongodb.net/md19302')
+mongoose.connect(process.env.DB)
   .then(() => console.log('>>>>>>>>>> DB Connected!!!!!!'))
   .catch(err => console.log('>>>>>>>>> DB Error: ', err));
 
